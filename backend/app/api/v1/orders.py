@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
-
+from datetime import datetime, timezone, timedelta
 from app.db.session import get_db
 from app.models.client_session import ClientSession
 from app.models.menu_item import MenuItem
@@ -138,3 +138,91 @@ def create_order(payload: OrderCreateIn, db: Session = Depends(get_db)):
         idempotency_key=order.idempotency_key,
         items=[OrderItemOut.model_validate(i) for i in order_items],
     )
+
+    from datetime import datetime, timezone, timedelta
+from app.schemas.order import OrderUpdateIn
+
+
+EDIT_WINDOW_SECONDS = 30
+
+
+def _ensure_order_editable(order: Order):
+    if order.status != OrderStatus.sent:
+        raise HTTPException(status_code=409, detail="Commande non modifiable (status).")
+    now = datetime.now(timezone.utc)
+    created = order.created_at
+    if created.tzinfo is None:
+        created = created.replace(tzinfo=timezone.utc)
+    if now - created > timedelta(seconds=EDIT_WINDOW_SECONDS):
+        raise HTTPException(status_code=409, detail="Fenêtre de modification expirée (30s).")
+
+
+@router.patch("/{order_id}", response_model=OrderOut)
+def update_order(order_id: int, payload: OrderUpdateIn, db: Session = Depends(get_db)):
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Commande introuvable.")
+
+    _ensure_order_editable(order)
+
+    # vérifier disponibilité items
+    requested_ids = [i.menu_item_id for i in payload.items]
+    menu_items = db.query(MenuItem).filter(
+        MenuItem.id.in_(requested_ids),
+        MenuItem.restaurant_id == order.restaurant_id,
+    ).all()
+    by_id = {m.id: m for m in menu_items}
+
+    for it in payload.items:
+        m = by_id.get(it.menu_item_id)
+        if not m:
+            raise HTTPException(status_code=404, detail=f"Produit {it.menu_item_id} introuvable.")
+        if not m.is_available:
+            raise HTTPException(status_code=409, detail=f"Produit '{m.name_fr}' indisponible actuellement.")
+
+    # remplacer toutes les lignes (simple et propre)
+    db.query(OrderItem).filter(OrderItem.order_id == order.id).delete()
+
+    total = 0.0
+    for it in payload.items:
+        m = by_id[it.menu_item_id]
+        unit_price = float(m.price)
+        line_total = unit_price * it.quantity
+        total += line_total
+        db.add(OrderItem(
+            order_id=order.id,
+            menu_item_id=m.id,
+            quantity=it.quantity,
+            unit_price=unit_price,
+            line_total=line_total,
+            note=it.note.strip() if it.note else None,
+        ))
+
+    order.total = total
+    db.commit()
+    db.refresh(order)
+
+    order_items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
+    return OrderOut(
+        id=order.id,
+        restaurant_id=order.restaurant_id,
+        table_id=order.table_id,
+        client_session_id=order.client_session_id,
+        status=order.status.value if hasattr(order.status, "value") else str(order.status),
+        total=float(order.total),
+        idempotency_key=order.idempotency_key,
+        items=[OrderItemOut.model_validate(i) for i in order_items],
+    )
+
+
+@router.delete("/{order_id}")
+def cancel_order(order_id: int, db: Session = Depends(get_db)):
+    order = db.query(Order).filter(Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Commande introuvable.")
+
+    _ensure_order_editable(order)
+
+    order.status = OrderStatus.cancelled
+    db.commit()
+    return {"message": "Commande annulée avec succès."}

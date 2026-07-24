@@ -34,3 +34,13 @@ class OrderOut(BaseModel):
     total: float
     idempotency_key: str
     items: List[OrderItemOut]
+
+
+class OrderItemUpdateIn(BaseModel):
+    menu_item_id: int = Field(gt=0)
+    quantity: int = Field(gt=0, le=50)
+    note: Optional[str] = Field(default=None, max_length=300)
+
+
+class OrderUpdateIn(BaseModel):
+    items: List[OrderItemUpdateIn] = Field(min_length=1)
