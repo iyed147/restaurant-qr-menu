@@ -1,5 +1,6 @@
 from pydantic import BaseModel, Field
 from typing import Optional, List
+from app.models.order import OrderStatus
 
 
 class OrderItemCreateIn(BaseModel):
@@ -44,3 +45,6 @@ class OrderItemUpdateIn(BaseModel):
 
 class OrderUpdateIn(BaseModel):
     items: List[OrderItemUpdateIn] = Field(min_length=1)
+
+class OrderStatusUpdateIn(BaseModel):
+    status: OrderStatus
