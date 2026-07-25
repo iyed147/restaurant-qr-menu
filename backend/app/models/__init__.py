@@ -7,7 +7,7 @@ from app.models.client_session import ClientSession
 from app.models.order import Order, OrderItem
 from app.models.review import Review
 from app.models.staff_request import StaffRequest
-from app.models.audit_log import AuditLog
+from app.models.audit_log import AdminAuditLog
 
 __all__ = [
     "User",
@@ -20,5 +20,5 @@ __all__ = [
     "OrderItem",
     "Review",
     "StaffRequest",
-    "AuditLog",
+    "AdminAuditLog",
 ]
