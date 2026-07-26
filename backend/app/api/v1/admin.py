@@ -1,9 +1,10 @@
 import secrets
-from fastapi import APIRouter, Depends, HTTPException, Query, Header
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
 from app.core.security import hash_password
+from app.core.deps import require_roles
 from app.models.restaurant import Restaurant
 from app.models.category import Category
 from app.models.menu_item import MenuItem
@@ -16,13 +17,11 @@ from app.schemas.admin import (
     AdminUserCreateIn, AdminUserRoleUpdateIn
 )
 
-router = APIRouter(prefix="/admin", tags=["Admin"])
-
-
-# TEMP DEV GUARD (à remplacer par vrai JWT RBAC en 1.9)
-def require_admin(x_admin_role: str | None = Header(default=None)):
-    if x_admin_role not in {"admin", "super_admin"}:
-        raise HTTPException(status_code=403, detail="Accès admin requis.")
+router = APIRouter(
+    prefix="/admin",
+    tags=["Admin"],
+    dependencies=[Depends(require_roles(UserRole.admin, UserRole.super_admin))],
+)
 
 
 def write_audit(db: Session, restaurant_id: int, admin_user_id: int | None, action: str, target_type: str, target_id: int):
@@ -36,9 +35,7 @@ def write_audit(db: Session, restaurant_id: int, admin_user_id: int | None, acti
 
 
 @router.post("/menu-items")
-def create_menu_item(payload: AdminMenuItemCreateIn, db: Session = Depends(get_db), x_admin_role: str | None = Header(default=None)):
-    require_admin(x_admin_role)
-
+def create_menu_item(payload: AdminMenuItemCreateIn, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
     restaurant = db.query(Restaurant).filter(Restaurant.id == payload.restaurant_id).first()
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant introuvable.")
@@ -64,15 +61,13 @@ def create_menu_item(payload: AdminMenuItemCreateIn, db: Session = Depends(get_d
     db.add(item)
     db.flush()
 
-    write_audit(db, payload.restaurant_id, None, "create_menu_item", "menu_item", item.id)
+    write_audit(db, payload.restaurant_id, current_user.id, "create_menu_item", "menu_item", item.id)
     db.commit()
     return {"id": item.id, "message": "Menu item créé."}
 
 
 @router.patch("/menu-items/{item_id}")
-def update_menu_item(item_id: int, payload: AdminMenuItemUpdateIn, db: Session = Depends(get_db), x_admin_role: str | None = Header(default=None)):
-    require_admin(x_admin_role)
-
+def update_menu_item(item_id: int, payload: AdminMenuItemUpdateIn, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
     item = db.query(MenuItem).filter(MenuItem.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Menu item introuvable.")
@@ -82,29 +77,25 @@ def update_menu_item(item_id: int, payload: AdminMenuItemUpdateIn, db: Session =
         if val is not None:
             setattr(item, field, val)
 
-    write_audit(db, item.restaurant_id, None, "update_menu_item", "menu_item", item.id)
+    write_audit(db, item.restaurant_id, current_user.id, "update_menu_item", "menu_item", item.id)
     db.commit()
     return {"message": "Menu item mis à jour."}
 
 
 @router.patch("/menu-items/{item_id}/availability")
-def toggle_menu_item_availability(item_id: int, payload: AdminAvailabilityIn, db: Session = Depends(get_db), x_admin_role: str | None = Header(default=None)):
-    require_admin(x_admin_role)
-
+def toggle_menu_item_availability(item_id: int, payload: AdminAvailabilityIn, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
     item = db.query(MenuItem).filter(MenuItem.id == item_id).first()
     if not item:
         raise HTTPException(status_code=404, detail="Menu item introuvable.")
 
     item.is_available = payload.is_available
-    write_audit(db, item.restaurant_id, None, "toggle_menu_item_availability", "menu_item", item.id)
+    write_audit(db, item.restaurant_id, current_user.id, "toggle_menu_item_availability", "menu_item", item.id)
     db.commit()
     return {"message": "Disponibilité mise à jour."}
 
 
 @router.post("/tables")
-def create_table(payload: AdminTableCreateIn, db: Session = Depends(get_db), x_admin_role: str | None = Header(default=None)):
-    require_admin(x_admin_role)
-
+def create_table(payload: AdminTableCreateIn, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
     restaurant = db.query(Restaurant).filter(Restaurant.id == payload.restaurant_id).first()
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant introuvable.")
@@ -125,29 +116,25 @@ def create_table(payload: AdminTableCreateIn, db: Session = Depends(get_db), x_a
     db.add(t)
     db.flush()
 
-    write_audit(db, payload.restaurant_id, None, "create_table", "table", t.id)
+    write_audit(db, payload.restaurant_id, current_user.id, "create_table", "table", t.id)
     db.commit()
     return {"id": t.id, "table_token": t.table_token, "message": "Table créée."}
 
 
 @router.patch("/tables/{table_id}/active")
-def set_table_active(table_id: int, payload: AdminTableActiveIn, db: Session = Depends(get_db), x_admin_role: str | None = Header(default=None)):
-    require_admin(x_admin_role)
-
+def set_table_active(table_id: int, payload: AdminTableActiveIn, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
     t = db.query(Table).filter(Table.id == table_id).first()
     if not t:
         raise HTTPException(status_code=404, detail="Table introuvable.")
 
     t.is_active = payload.is_active
-    write_audit(db, t.restaurant_id, None, "set_table_active", "table", t.id)
+    write_audit(db, t.restaurant_id, current_user.id, "set_table_active", "table", t.id)
     db.commit()
     return {"message": "Statut table mis à jour."}
 
 
 @router.post("/users")
-def create_user(payload: AdminUserCreateIn, db: Session = Depends(get_db), x_admin_role: str | None = Header(default=None)):
-    require_admin(x_admin_role)
-
+def create_user(payload: AdminUserCreateIn, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
     restaurant = db.query(Restaurant).filter(Restaurant.id == payload.restaurant_id).first()
     if not restaurant:
         raise HTTPException(status_code=404, detail="Restaurant introuvable.")
@@ -157,46 +144,42 @@ def create_user(payload: AdminUserCreateIn, db: Session = Depends(get_db), x_adm
         raise HTTPException(status_code=409, detail="Email déjà utilisé.")
 
     user = User(
-    restaurant_id=payload.restaurant_id,
-    email=payload.email,
-    password_hash=hash_password(payload.password),
-    nom=payload.nom,
-    prenom=payload.prenom,
-    role=payload.role,
-)
+        restaurant_id=payload.restaurant_id,
+        email=payload.email,
+        password_hash=hash_password(payload.password),
+        nom=payload.nom,
+        prenom=payload.prenom,
+        role=payload.role,
+    )
     db.add(user)
     db.flush()
 
-    write_audit(db, payload.restaurant_id, None, "create_user", "user", user.id)
+    write_audit(db, payload.restaurant_id, current_user.id, "create_user", "user", user.id)
     db.commit()
     return {"id": user.id, "message": "Utilisateur créé."}
 
 
 @router.get("/users")
-def list_users(restaurant_id: int = Query(..., gt=0), db: Session = Depends(get_db), x_admin_role: str | None = Header(default=None)):
-    require_admin(x_admin_role)
-
+def list_users(restaurant_id: int = Query(..., gt=0), db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
     users = db.query(User).filter(User.restaurant_id == restaurant_id).order_by(User.id.desc()).all()
     return [
-    {
-        "id": u.id,
-        "email": u.email,
-        "nom": u.nom,
-        "prenom": u.prenom,
-        "role": u.role.value if hasattr(u.role, "value") else str(u.role),
-    } for u in users
-]
+        {
+            "id": u.id,
+            "email": u.email,
+            "nom": u.nom,
+            "prenom": u.prenom,
+            "role": u.role.value if hasattr(u.role, "value") else str(u.role),
+        } for u in users
+    ]
 
 
 @router.patch("/users/{user_id}/role")
-def update_user_role(user_id: int, payload: AdminUserRoleUpdateIn, db: Session = Depends(get_db), x_admin_role: str | None = Header(default=None)):
-    require_admin(x_admin_role)
-
+def update_user_role(user_id: int, payload: AdminUserRoleUpdateIn, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
     u = db.query(User).filter(User.id == user_id).first()
     if not u:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable.")
 
     u.role = payload.role
-    write_audit(db, u.restaurant_id, None, "update_user_role", "user", u.id)
+    write_audit(db, u.restaurant_id, current_user.id, "update_user_role", "user", u.id)
     db.commit()
     return {"message": "Rôle utilisateur mis à jour."}

@@ -2,6 +2,8 @@ from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSock
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
+from app.core.deps import require_roles
+from app.models.user import User, UserRole
 from app.models.order import Order, OrderItem, OrderStatus
 from app.schemas.order import OrderOut, OrderItemOut, OrderStatusUpdateIn
 from app.ws.order_ws import order_ws_manager
@@ -27,6 +29,7 @@ def list_orders(
     restaurant_id: int = Query(..., gt=0),
     status: OrderStatus | None = Query(default=None),
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.employe, UserRole.admin, UserRole.super_admin)),
 ):
     q = db.query(Order).filter(Order.restaurant_id == restaurant_id)
     if status:
@@ -45,6 +48,7 @@ async def update_order_status(
     order_id: int,
     payload: OrderStatusUpdateIn,
     db: Session = Depends(get_db),
+    current_user: User = Depends(require_roles(UserRole.employe, UserRole.admin, UserRole.super_admin)),
 ):
     order = db.query(Order).filter(Order.id == order_id).first()
     if not order:
