@@ -121,6 +121,19 @@ def create_table(payload: AdminTableCreateIn, db: Session = Depends(get_db), cur
     return {"id": t.id, "table_token": t.table_token, "message": "Table créée."}
 
 
+@router.get("/tables")
+def list_tables(restaurant_id: int = Query(..., gt=0), db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
+    tables = db.query(Table).filter(Table.restaurant_id == restaurant_id).order_by(Table.table_number.asc()).all()
+    return [
+        {
+            "id": t.id,
+            "table_number": t.table_number,
+            "table_token": t.table_token,
+            "is_active": t.is_active,
+        } for t in tables
+    ]
+
+
 @router.patch("/tables/{table_id}/active")
 def set_table_active(table_id: int, payload: AdminTableActiveIn, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
     t = db.query(Table).filter(Table.id == table_id).first()
