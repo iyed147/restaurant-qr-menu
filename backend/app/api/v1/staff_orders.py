@@ -20,7 +20,18 @@ def _to_order_out(order: Order, items: list[OrderItem]) -> OrderOut:
         status=order.status.value if hasattr(order.status, "value") else str(order.status),
         total=float(order.total),
         idempotency_key=order.idempotency_key,
-        items=[OrderItemOut.model_validate(i) for i in items],
+        items=[
+            OrderItemOut(
+                id=i.id,
+                menu_item_id=i.menu_item_id,
+                name_fr=i.menu_item.name_fr if i.menu_item else "Produit supprimé",
+                quantity=i.quantity,
+                unit_price=float(i.unit_price),
+                line_total=float(i.line_total),
+                note=i.note,
+            )
+            for i in items
+        ],
     )
 
 

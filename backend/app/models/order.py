@@ -2,7 +2,7 @@ import enum
 import datetime
 from sqlalchemy import DateTime, func
 from sqlalchemy import Integer, String, ForeignKey, Enum, Numeric, UniqueConstraint, DateTime, func
-from sqlalchemy.orm import Mapped, mapped_column
+from sqlalchemy.orm import Mapped, mapped_column, relationship
 from app.db.base import Base
 
 
@@ -42,3 +42,5 @@ class OrderItem(Base):
     unit_price: Mapped[float] = mapped_column(Numeric(10, 3), nullable=False)
     line_total: Mapped[float] = mapped_column(Numeric(10, 3), nullable=False)
     note: Mapped[str | None] = mapped_column(String(300), nullable=True)
+
+    menu_item = relationship("MenuItem")

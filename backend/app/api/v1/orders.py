@@ -4,6 +4,7 @@ from sqlalchemy.exc import IntegrityError
 from datetime import datetime, timezone, timedelta
 
 from app.db.session import get_db
+from app.core.deps import ensure_client_session_valid
 from app.models.client_session import ClientSession
 from app.models.menu_item import MenuItem
 from app.models.order import Order, OrderItem, OrderStatus
@@ -24,7 +25,18 @@ def _order_to_out(order: Order, items: list[OrderItem]) -> OrderOut:
         status=order.status.value if hasattr(order.status, "value") else str(order.status),
         total=float(order.total),
         idempotency_key=order.idempotency_key,
-        items=[OrderItemOut.model_validate(i) for i in items],
+        items=[
+            OrderItemOut(
+                id=i.id,
+                menu_item_id=i.menu_item_id,
+                name_fr=i.menu_item.name_fr if i.menu_item else "Produit supprimé",
+                quantity=i.quantity,
+                unit_price=float(i.unit_price),
+                line_total=float(i.line_total),
+                note=i.note,
+            )
+            for i in items
+        ],
     )
 
 
@@ -54,10 +66,12 @@ async def create_order(payload: OrderCreateIn, db: Session = Depends(get_db)):
         existing_items = db.query(OrderItem).filter(OrderItem.order_id == existing.id).all()
         return _order_to_out(existing, existing_items)
 
-    # 2) Session client valide
+    # 2) Session client valide (existe + non expirée)
     client_session = db.query(ClientSession).filter(ClientSession.id == payload.client_session_id).first()
     if not client_session:
         raise HTTPException(status_code=404, detail="Client session introuvable.")
+
+    ensure_client_session_valid(client_session)
 
     # 3) Vérifier disponibilité des items AVANT insertion (concurrence stock)
     requested_ids = [i.menu_item_id for i in payload.items]
@@ -118,7 +132,6 @@ async def create_order(payload: OrderCreateIn, db: Session = Depends(get_db)):
 
     except IntegrityError:
         db.rollback()
-        # Cas double submit simultané: renvoyer commande existante
         again = (
             db.query(Order)
             .filter(
@@ -136,7 +149,6 @@ async def create_order(payload: OrderCreateIn, db: Session = Depends(get_db)):
     order_items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
     result = _order_to_out(order, order_items)
 
-    # Broadcast WS: nouvelle commande
     await order_ws_manager.broadcast(
         order.restaurant_id,
         {"type": "order_created", "order": result.model_dump()},
@@ -151,9 +163,12 @@ async def update_order(order_id: int, payload: OrderUpdateIn, db: Session = Depe
     if not order:
         raise HTTPException(status_code=404, detail="Commande introuvable.")
 
+    client_session = db.query(ClientSession).filter(ClientSession.id == order.client_session_id).first()
+    if client_session:
+        ensure_client_session_valid(client_session)
+
     _ensure_order_editable(order)
 
-    # vérifier disponibilité items
     requested_ids = [i.menu_item_id for i in payload.items]
     menu_items = db.query(MenuItem).filter(
         MenuItem.id.in_(requested_ids),
@@ -168,7 +183,6 @@ async def update_order(order_id: int, payload: OrderUpdateIn, db: Session = Depe
         if not m.is_available:
             raise HTTPException(status_code=409, detail=f"Produit '{m.name_fr}' indisponible actuellement.")
 
-    # remplacer toutes les lignes (simple et propre)
     db.query(OrderItem).filter(OrderItem.order_id == order.id).delete()
 
     total = 0.0
@@ -193,7 +207,6 @@ async def update_order(order_id: int, payload: OrderUpdateIn, db: Session = Depe
     order_items = db.query(OrderItem).filter(OrderItem.order_id == order.id).all()
     result = _order_to_out(order, order_items)
 
-    # Broadcast WS: commande modifiée
     await order_ws_manager.broadcast(
         order.restaurant_id,
         {"type": "order_updated", "order": result.model_dump()},
@@ -208,12 +221,15 @@ async def cancel_order(order_id: int, db: Session = Depends(get_db)):
     if not order:
         raise HTTPException(status_code=404, detail="Commande introuvable.")
 
+    client_session = db.query(ClientSession).filter(ClientSession.id == order.client_session_id).first()
+    if client_session:
+        ensure_client_session_valid(client_session)
+
     _ensure_order_editable(order)
 
     order.status = OrderStatus.cancelled
     db.commit()
 
-    # Broadcast WS: commande annulée
     await order_ws_manager.broadcast(
         order.restaurant_id,
         {

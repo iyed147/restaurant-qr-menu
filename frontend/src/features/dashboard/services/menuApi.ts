@@ -36,3 +36,11 @@ export function updateMenuItem(
 export function toggleAvailability(itemId: number, is_available: boolean) {
   return api.patch(`/admin/menu-items/${itemId}/availability`, { is_available });
 }
+
+export function createCategory(payload: {
+  restaurant_id: number;
+  name_fr: string;
+  name_en: string;
+}) {
+  return api.post("/admin/categories", payload);
+}

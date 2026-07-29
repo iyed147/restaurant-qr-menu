@@ -10,12 +10,15 @@ export default function CartModal({ onClose }: { onClose: () => void }) {
   const items = useCart((s) => s.items);
   const total = useCart((s) => s.total());
   const removeItem = useCart((s) => s.removeItem);
+  const updateQuantity = useCart((s) => s.updateQuantity);
   const clearCart = useCart((s) => s.clear);
   const clientSessionId = useCustomerSession((s) => s.clientSessionId);
+  const setLastOrder = useCustomerSession((s) => s.setLastOrder);
 
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [order, setOrder] = useState<OrderDTO | null>(null);
+  const [orderCreatedAt, setOrderCreatedAt] = useState<number>(0);
 
   const handleConfirm = async () => {
     setSubmitting(true);
@@ -31,7 +34,8 @@ export default function CartModal({ onClose }: { onClose: () => void }) {
         })),
       });
       setOrder(res.data);
-      clearCart();
+      setLastOrder(res.data.id, res.data.status);
+      setOrderCreatedAt(Date.now());
     } catch {
       setError("Un article n'est plus disponible. Vérifiez votre panier.");
     } finally {
@@ -40,7 +44,7 @@ export default function CartModal({ onClose }: { onClose: () => void }) {
   };
 
   if (order) {
-    return <OrderStatusView order={order} onClose={onClose} />;
+    return <OrderStatusView order={order} createdAt={orderCreatedAt} onClose={onClose} />;
   }
 
   return (
@@ -57,14 +61,37 @@ export default function CartModal({ onClose }: { onClose: () => void }) {
           {items.map((item) => (
             <div key={item.menuItemId} className="flex justify-between items-center">
               <div>
-                <p className="text-[#1C1917]">
-                  {item.quantity}× {item.nameFr}
-                </p>
+                <p className="text-[#1C1917]">{item.nameFr}</p>
+                <span className="text-sm text-[#78716C]">
+                  {item.price.toFixed(2)} DT / unité
+                </span>
               </div>
+
               <div className="flex items-center gap-3">
-                <span className="text-[#78716C]">
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={() =>
+                      item.quantity === 1
+                        ? removeItem(item.menuItemId)
+                        : updateQuantity(item.menuItemId, item.quantity - 1)
+                    }
+                    className="w-7 h-7 flex items-center justify-center rounded-lg border border-[#E7E5E4] text-[#1C1917]"
+                  >
+                    −
+                  </button>
+                  <span className="w-5 text-center text-[#1C1917]">{item.quantity}</span>
+                  <button
+                    onClick={() => updateQuantity(item.menuItemId, item.quantity + 1)}
+                    className="w-7 h-7 flex items-center justify-center rounded-lg border border-[#E7E5E4] text-[#1C1917]"
+                  >
+                    +
+                  </button>
+                </div>
+
+                <span className="text-[#78716C] w-16 text-right">
                   {(item.price * item.quantity).toFixed(2)} DT
                 </span>
+
                 <button
                   onClick={() => removeItem(item.menuItemId)}
                   className="text-red-600 text-sm"

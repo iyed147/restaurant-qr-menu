@@ -34,8 +34,11 @@ export default function OrderCard({
 
   const handleAdvance = async () => {
     if (!next) return;
+
     try {
-      await api.patch(`/staff/orders/${order.id}/status`, { status: next });
+      await api.patch(`/staff/orders/${order.id}/status`, {
+        status: next,
+      });
       onUpdated();
     } catch {
       alert("Impossible de mettre à jour le statut.");
@@ -46,9 +49,14 @@ export default function OrderCard({
     <div className="bg-white rounded-xl border border-[#E7E5E4] p-4">
       <div className="flex justify-between items-start mb-2">
         <div>
-          <p className="font-semibold text-[#1C1917]">Table {order.table_id}</p>
-          <p className="text-xs text-[#78716C]">Commande #{order.id}</p>
+          <p className="font-semibold text-[#1C1917]">
+            Table {order.table_id}
+          </p>
+          <p className="text-xs text-[#78716C]">
+            Commande #{order.id}
+          </p>
         </div>
+
         <span className="text-xs font-medium px-2 py-1 rounded-full bg-[#0F766E]/10 text-[#0F766E]">
           {STATUS_LABELS[order.status]}
         </span>
@@ -57,14 +65,22 @@ export default function OrderCard({
       <ul className="text-sm text-[#1C1917] mb-3 space-y-1">
         {order.items.map((item) => (
           <li key={item.id}>
-            {item.quantity}× article #{item.menu_item_id}
-            {item.note && <span className="text-[#78716C]"> — {item.note}</span>}
+            {item.quantity}× {item.name_fr}
+            {item.note && (
+              <span className="text-[#78716C]">
+                {" "}
+                — {item.note}
+              </span>
+            )}
           </li>
         ))}
       </ul>
 
       <div className="flex justify-between items-center">
-        <span className="font-medium text-[#1C1917]">{order.total.toFixed(2)} DT</span>
+        <span className="font-medium text-[#1C1917]">
+          {order.total.toFixed(2)} DT
+        </span>
+
         {next && (
           <button
             onClick={handleAdvance}

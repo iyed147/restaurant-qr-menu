@@ -1,6 +1,6 @@
 import { useEffect, useState, useCallback } from "react";
 import api from "../../../services/api";
-import { useOrdersSocket } from "../hooks/useOrdersSocket";
+import { useOrdersSocket } from "../../../shared/hooks/useOrdersSocket";
 import OrderCard from "./OrderCard";
 import type { StaffOrder } from "../types";
 
@@ -22,7 +22,12 @@ export default function OrdersTab() {
   }, [fetchOrders]);
 
   const { connected } = useOrdersSocket(RESTAURANT_ID, (event) => {
-    if (event.type === "order_created" || event.type === "order_status_updated") {
+    if (
+      event.type === "order_created" ||
+      event.type === "order_status_updated" ||
+      event.type === "order_updated" ||
+      event.type === "order_cancelled"
+    ) {
       fetchOrders();
     }
   });

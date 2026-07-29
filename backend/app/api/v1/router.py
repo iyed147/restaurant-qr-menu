@@ -1,5 +1,5 @@
 from fastapi import APIRouter
-from app.api.v1 import client_sessions, menu, orders, staff_orders, admin, reviews, auth
+from app.api.v1 import client_sessions, menu, orders, staff_orders, admin, reviews, auth, staff_requests
 
 api_router = APIRouter()
 api_router.include_router(client_sessions.router)
@@ -9,3 +9,4 @@ api_router.include_router(staff_orders.router)
 api_router.include_router(admin.router)
 api_router.include_router(reviews.router)
 api_router.include_router(auth.router)
+api_router.include_router(staff_requests.router)

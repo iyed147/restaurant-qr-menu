@@ -28,6 +28,7 @@ export interface OrderDTO {
   items: Array<{
     id: number;
     menu_item_id: number;
+    name_fr: string;
     quantity: number;
     unit_price: number;
     line_total: number;

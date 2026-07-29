@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback } from "react";
 import { fetchFullMenu, toggleAvailability } from "../services/menuApi";
 import MenuItemForm from "./MenuItemForm";
 import MenuItemEditModal from "./MenuItemEditModal";
+import CategoryCreateForm from "./CategoryCreateForm";
 import type { CategoryDTO, MenuItemDTO } from "../../customer/types";
 
 const RESTAURANT_ID = 1;
@@ -10,6 +11,7 @@ export default function MenuTab() {
   const [categories, setCategories] = useState<CategoryDTO[]>([]);
   const [loading, setLoading] = useState(true);
   const [showCreateForm, setShowCreateForm] = useState(false);
+  const [showCategoryForm, setShowCategoryForm] = useState(false);
   const [editingItem, setEditingItem] = useState<MenuItemDTO | null>(null);
 
   const load = useCallback(() => {
@@ -31,16 +33,27 @@ export default function MenuTab() {
     }
   };
 
-  if (loading) return <div className="p-4 text-[#78716C]">Chargement…</div>;
+  if (loading) {
+    return <div className="p-4 text-[#78716C]">Chargement…</div>;
+  }
 
   return (
     <div className="p-4">
-      <button
-        onClick={() => setShowCreateForm(true)}
-        className="w-full bg-[#0F766E] text-white py-3 rounded-lg font-medium mb-6"
-      >
-        + Ajouter un produit
-      </button>
+      <div className="flex gap-3 mb-6">
+        <button
+          onClick={() => setShowCreateForm(true)}
+          className="flex-1 bg-[#0F766E] text-white py-3 rounded-lg font-medium"
+        >
+          + Produit
+        </button>
+
+        <button
+          onClick={() => setShowCategoryForm(true)}
+          className="flex-1 bg-[#0F766E] text-white py-3 rounded-lg font-medium"
+        >
+          + Catégorie
+        </button>
+      </div>
 
       {categories.length === 0 && (
         <p className="text-[#78716C]">
@@ -54,10 +67,12 @@ export default function MenuTab() {
           <h2 className="text-base font-semibold text-[#1C1917] mb-3">
             {cat.name_fr}
           </h2>
+
           <div className="space-y-3">
             {cat.items.length === 0 && (
               <p className="text-sm text-[#78716C]">Aucun produit.</p>
             )}
+
             {cat.items.map((item) => (
               <div
                 key={item.id}
@@ -65,16 +80,21 @@ export default function MenuTab() {
               >
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <p className="font-medium text-[#1C1917]">{item.name_fr}</p>
+                    <p className="font-medium text-[#1C1917]">
+                      {item.name_fr}
+                    </p>
+
                     {item.description_fr && (
                       <p className="text-sm text-[#78716C]">
                         {item.description_fr}
                       </p>
                     )}
+
                     <p className="text-sm text-[#0F766E] mt-1">
                       {item.price.toFixed(2)} DT
                     </p>
                   </div>
+
                   <span
                     className={`text-xs font-medium px-2 py-1 rounded-full ${
                       item.is_available
@@ -85,6 +105,7 @@ export default function MenuTab() {
                     {item.is_available ? "Disponible" : "Indisponible"}
                   </span>
                 </div>
+
                 <div className="flex gap-2 mt-2">
                   <button
                     onClick={() => setEditingItem(item)}
@@ -92,6 +113,7 @@ export default function MenuTab() {
                   >
                     Modifier
                   </button>
+
                   <button
                     onClick={() => handleToggle(item)}
                     className={`flex-1 text-sm font-medium py-2 rounded-lg ${
@@ -100,7 +122,9 @@ export default function MenuTab() {
                         : "border border-[#0F766E]/30 text-[#0F766E]"
                     }`}
                   >
-                    {item.is_available ? "Marquer indisponible" : "Marquer disponible"}
+                    {item.is_available
+                      ? "Marquer indisponible"
+                      : "Marquer disponible"}
                   </button>
                 </div>
               </div>
@@ -114,6 +138,13 @@ export default function MenuTab() {
           categories={categories}
           onCreated={load}
           onClose={() => setShowCreateForm(false)}
+        />
+      )}
+
+      {showCategoryForm && (
+        <CategoryCreateForm
+          onCreated={load}
+          onClose={() => setShowCategoryForm(false)}
         />
       )}
 

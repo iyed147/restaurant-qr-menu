@@ -4,6 +4,7 @@ import { useAuthStore } from "../../features/auth/store/authStore";
 import OrdersTab from "../../features/dashboard/components/OrdersTab";
 import MenuTab from "../../features/dashboard/components/MenuTab";
 import TablesTab from "../../features/dashboard/components/TablesTab";
+import UsersTab from "../../features/dashboard/components/UsersTab";
 type Tab = "orders" | "menu" | "tables" | "users";
 
 export default function DashboardPage() {
@@ -52,9 +53,7 @@ export default function DashboardPage() {
       {tab === "orders" && <OrdersTab />}
       {tab === "menu" && isAdmin && <MenuTab />}
       {tab === "tables" && isAdmin && <TablesTab />}
-      {tab === "users" && isAdmin && (
-        <div className="p-4 text-[#78716C]">Gestion des employés — à construire</div>
-      )}
+      {tab === "users" && isAdmin && <UsersTab />}
     </div>
   );
 }

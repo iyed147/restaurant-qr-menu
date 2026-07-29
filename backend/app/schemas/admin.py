@@ -48,3 +48,9 @@ class AdminUserCreateIn(BaseModel):
 
 class AdminUserRoleUpdateIn(BaseModel):
     role: UserRole
+
+
+class AdminCategoryCreateIn(BaseModel):
+    restaurant_id: int = Field(gt=0)
+    name_fr: str = Field(min_length=1, max_length=100)
+    name_en: str = Field(min_length=1, max_length=100)

@@ -14,7 +14,8 @@ from app.models.audit_log import AdminAuditLog
 from app.schemas.admin import (
     AdminMenuItemCreateIn, AdminMenuItemUpdateIn, AdminAvailabilityIn,
     AdminTableCreateIn, AdminTableActiveIn,
-    AdminUserCreateIn, AdminUserRoleUpdateIn
+    AdminUserCreateIn, AdminUserRoleUpdateIn,
+    AdminCategoryCreateIn
 )
 
 router = APIRouter(
@@ -32,6 +33,34 @@ def write_audit(db: Session, restaurant_id: int, admin_user_id: int | None, acti
         target_type=target_type,
         target_id=target_id,
     ))
+
+
+@router.post("/categories")
+def create_category(payload: AdminCategoryCreateIn, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
+    restaurant = db.query(Restaurant).filter(Restaurant.id == payload.restaurant_id).first()
+    if not restaurant:
+        raise HTTPException(status_code=404, detail="Restaurant introuvable.")
+
+    exists = db.query(Category).filter(
+        Category.restaurant_id == payload.restaurant_id,
+        Category.name_fr == payload.name_fr
+    ).first()
+    if exists:
+        raise HTTPException(status_code=409, detail="Cette catégorie existe déjà.")
+
+    category = Category(
+        restaurant_id=payload.restaurant_id,
+        name_fr=payload.name_fr,
+        name_en=payload.name_en,
+    )
+    db.add(category)
+    db.flush()
+
+    write_audit(db, payload.restaurant_id, current_user.id, "create_category", "category", category.id)
+    db.commit()
+    return {"id": category.id, "message": "Catégorie créée."}
+
+
 
 
 @router.post("/menu-items")
@@ -188,6 +217,9 @@ def list_users(restaurant_id: int = Query(..., gt=0), db: Session = Depends(get_
 
 @router.patch("/users/{user_id}/role")
 def update_user_role(user_id: int, payload: AdminUserRoleUpdateIn, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
+    if user_id == current_user.id:
+        raise HTTPException(status_code=400, detail="Vous ne pouvez pas modifier votre propre rôle.")
+
     u = db.query(User).filter(User.id == user_id).first()
     if not u:
         raise HTTPException(status_code=404, detail="Utilisateur introuvable.")

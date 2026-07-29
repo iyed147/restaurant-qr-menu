@@ -18,6 +18,7 @@ class OrderCreateIn(BaseModel):
 class OrderItemOut(BaseModel):
     id: int
     menu_item_id: int
+    name_fr: str
     quantity: int
     unit_price: float
     line_total: float
