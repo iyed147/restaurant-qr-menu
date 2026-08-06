@@ -7,9 +7,11 @@ import StartSessionForm from "../../features/customer/components/StartSessionFor
 import MenuBrowser from "../../features/customer/components/MenuBrowser";
 import CartBar from "../../features/customer/components/CartBar";
 import type { CategoryDTO } from "../../features/customer/types";
+import { useTranslation } from "react-i18next";
 
 export default function CustomerMenuPage() {
   const { restaurantId } = useParams();
+  const { t, i18n } = useTranslation();
   const [searchParams] = useSearchParams();
   const tableToken = searchParams.get("table_token");
 
@@ -41,16 +43,14 @@ export default function CustomerMenuPage() {
     api
       .get<CategoryDTO[]>(`/menu/${restaurantId}`)
       .then((res) => setCategories(res.data))
-      .catch(() => setError("Impossible de charger le menu."))
+      .catch(() => setError(t("menu_load_error")))
       .finally(() => setLoading(false));
   }, [restaurantId]);
 
   if (!tableToken) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAFAF9] px-4">
-        <p className="text-[#78716C] text-center">
-          QR Code invalide. Merci de scanner le QR posé sur votre table.
-        </p>
+        <p className="text-[#78716C] text-center">{t("invalid_qr")}</p>
       </div>
     );
   }
@@ -58,7 +58,7 @@ export default function CustomerMenuPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-[#FAFAF9]">
-        <p className="text-[#78716C]">Chargement du menu…</p>
+        <p className="text-[#78716C]">{t("loading_menu")}</p>
       </div>
     );
   }
@@ -85,35 +85,46 @@ export default function CustomerMenuPage() {
       <header className="bg-white border-b border-[#E7E5E4] px-4 py-4 sticky top-0 z-10 flex items-center justify-between">
         <div>
           <h1 className="text-lg font-semibold text-[#1C1917]">
-            Table {session.tableNumber}
+            {t("table")} {session.tableNumber}
           </h1>
 
           <p className="text-sm text-[#78716C]">
-            Bonjour {session.prenom} {session.nom}
+            {t("hello")} {session.prenom} {session.nom}
           </p>
         </div>
 
-        {session.lastOrderStatus && (
-          <span
-            className={`text-xs font-medium px-2 py-1 rounded-full ${
-              session.lastOrderStatus === "completed"
-                ? "bg-[#0F766E]/10 text-[#0F766E]"
-                : session.lastOrderStatus === "cancelled"
-                ? "bg-red-100 text-red-600"
-                : "bg-amber-100 text-amber-700"
-            }`}
-          >
-            {
-              {
-                sent: "Envoyée",
-                preparing: "En préparation",
-                served: "Servie",
-                completed: "Terminée",
-                cancelled: "Annulée",
-              }[session.lastOrderStatus]
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() =>
+              i18n.changeLanguage(i18n.language === "fr" ? "en" : "fr")
             }
-          </span>
-        )}
+            className="text-xs font-medium text-[#78716C] border border-[#E7E5E4] px-2 py-1 rounded-lg"
+          >
+            {i18n.language === "fr" ? "EN" : "FR"}
+          </button>
+
+          {session.lastOrderStatus && (
+            <span
+              className={`text-xs font-medium px-2 py-1 rounded-full ${
+                session.lastOrderStatus === "completed"
+                  ? "bg-[#0F766E]/10 text-[#0F766E]"
+                  : session.lastOrderStatus === "cancelled"
+                  ? "bg-red-100 text-red-600"
+                  : "bg-amber-100 text-amber-700"
+              }`}
+            >
+              {
+                {
+                  sent: t("order_status_sent"),
+                  preparing: t("order_status_preparing"),
+                  served: t("order_status_served"),
+                  completed: t("order_status_completed"),
+                  cancelled: t("order_status_cancelled"),
+                }[session.lastOrderStatus]
+              }
+            </span>
+          )}
+        </div>
       </header>
 
       <MenuBrowser categories={categories} />

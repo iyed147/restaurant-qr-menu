@@ -1,4 +1,4 @@
-from fastapi import APIRouter, Depends, HTTPException, Query, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, Depends, HTTPException, Query
 from sqlalchemy.orm import Session
 
 from app.db.session import get_db
@@ -102,13 +102,3 @@ async def update_order_status(
     return out
 
 
-@router.websocket("/ws/restaurants/{restaurant_id}/orders")
-async def orders_ws(websocket: WebSocket, restaurant_id: int):
-    await order_ws_manager.connect(restaurant_id, websocket)
-    try:
-        while True:
-            await websocket.receive_text()  # keepalive/client ping
-    except WebSocketDisconnect:
-        order_ws_manager.disconnect(restaurant_id, websocket)
-    except Exception:
-        order_ws_manager.disconnect(restaurant_id, websocket)

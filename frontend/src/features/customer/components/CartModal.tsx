@@ -11,7 +11,6 @@ export default function CartModal({ onClose }: { onClose: () => void }) {
   const total = useCart((s) => s.total());
   const removeItem = useCart((s) => s.removeItem);
   const updateQuantity = useCart((s) => s.updateQuantity);
-  const clearCart = useCart((s) => s.clear);
   const clientSessionId = useCustomerSession((s) => s.clientSessionId);
   const setLastOrder = useCustomerSession((s) => s.setLastOrder);
 

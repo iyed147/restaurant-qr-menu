@@ -1,7 +1,11 @@
 from collections import defaultdict
-from fastapi import APIRouter, WebSocket, WebSocketDisconnect
+from fastapi import APIRouter, WebSocket, WebSocketDisconnect, Depends
+from sqlalchemy.orm import Session
 from typing import Dict, Set
 import json
+
+from app.db.session import get_db
+from app.models.restaurant import Restaurant
 
 
 class OrderWSManager:
@@ -33,10 +37,17 @@ router = APIRouter(tags=["WebSocket Orders"])
 
 
 @router.websocket("/ws/orders/{restaurant_id}")
-async def orders_ws_endpoint(websocket: WebSocket, restaurant_id: int):
+async def orders_ws_endpoint(websocket: WebSocket, restaurant_id: int, db: Session = Depends(get_db)):
+    restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
+    if not restaurant:
+        await websocket.close(code=4404)
+        return
+
     await order_ws_manager.connect(restaurant_id, websocket)
     try:
         while True:
             await websocket.receive_text()
     except WebSocketDisconnect:
+        order_ws_manager.disconnect(restaurant_id, websocket)
+    except Exception:
         order_ws_manager.disconnect(restaurant_id, websocket)

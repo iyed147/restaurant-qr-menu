@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useCart } from "../store/cart";
-import { useCustomerSession } from "../store/customerSession";
-import api from "../../../services/api";
 import CartModal from "./CartModal";
 
 export default function CartBar() {
