@@ -61,7 +61,20 @@ def create_category(payload: AdminCategoryCreateIn, db: Session = Depends(get_db
     return {"id": category.id, "message": "Catégorie créée."}
 
 
+@router.delete("/categories/{category_id}")
+def delete_category(category_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
+    category = db.query(Category).filter(Category.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Catégorie introuvable.")
 
+    items_count = db.query(MenuItem).filter(MenuItem.category_id == category_id).count()
+    if items_count > 0:
+        raise HTTPException(status_code=409, detail="Impossible de supprimer une catégorie contenant des produits.")
+
+    write_audit(db, category.restaurant_id, current_user.id, "delete_category", "category", category.id)
+    db.delete(category)
+    db.commit()
+    return {"message": "Catégorie supprimée."}
 
 @router.post("/menu-items")
 def create_menu_item(payload: AdminMenuItemCreateIn, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
@@ -121,6 +134,26 @@ def toggle_menu_item_availability(item_id: int, payload: AdminAvailabilityIn, db
     write_audit(db, item.restaurant_id, current_user.id, "toggle_menu_item_availability", "menu_item", item.id)
     db.commit()
     return {"message": "Disponibilité mise à jour."}
+
+@router.delete("/menu-items/{item_id}")
+def delete_menu_item(item_id: int, db: Session = Depends(get_db), current_user: User = Depends(require_roles(UserRole.admin, UserRole.super_admin))):
+    from app.models.order import OrderItem
+
+    item = db.query(MenuItem).filter(MenuItem.id == item_id).first()
+    if not item:
+        raise HTTPException(status_code=404, detail="Menu item introuvable.")
+
+    has_orders = db.query(OrderItem).filter(OrderItem.menu_item_id == item_id).first()
+    if has_orders:
+        raise HTTPException(
+            status_code=409,
+            detail="Ce produit a déjà été commandé et ne peut pas être supprimé. Utilisez 'Marquer indisponible' à la place."
+        )
+
+    write_audit(db, item.restaurant_id, current_user.id, "delete_menu_item", "menu_item", item.id)
+    db.delete(item)
+    db.commit()
+    return {"message": "Menu item supprimé."}
 
 
 @router.post("/tables")
