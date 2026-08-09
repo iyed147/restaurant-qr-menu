@@ -1,9 +1,10 @@
 import { useEffect, useState, useCallback } from "react";
-import { fetchFullMenu, toggleAvailability } from "../services/menuApi";
+import { fetchFullMenu, toggleAvailability, deleteMenuItem, deleteCategory } from "../services/menuApi";
 import MenuItemForm from "./MenuItemForm";
 import MenuItemEditModal from "./MenuItemEditModal";
 import CategoryCreateForm from "./CategoryCreateForm";
 import type { CategoryDTO, MenuItemDTO } from "../../customer/types";
+
 
 const RESTAURANT_ID = 1;
 
@@ -30,6 +31,27 @@ export default function MenuTab() {
       load();
     } catch {
       alert("Impossible de changer la disponibilité.");
+    }
+  };
+
+  const handleDeleteItem = async (item: MenuItemDTO) => {
+    if (!confirm(`Supprimer "${item.name_fr}" ?`)) return;
+    try {
+      await deleteMenuItem(item.id);
+      load();
+    } catch (err: any) {
+      const message = err?.response?.data?.detail || "Impossible de supprimer ce produit.";
+      alert(message);
+    }
+  };
+
+  const handleDeleteCategory = async (categoryId: number, categoryName: string) => {
+    if (!confirm(`Supprimer la catégorie "${categoryName}" ?`)) return;
+    try {
+      await deleteCategory(categoryId);
+      load();
+    } catch {
+      alert("Impossible de supprimer cette catégorie (contient peut-être des produits).");
     }
   };
 
@@ -64,9 +86,17 @@ export default function MenuTab() {
 
       {categories.map((cat) => (
         <section key={cat.id} className="mb-6">
-          <h2 className="text-base font-semibold text-[#1C1917] mb-3">
-            {cat.name_fr}
-          </h2>
+          <div className="flex items-center justify-between mb-3">
+            <h2 className="text-base font-semibold text-[#1C1917]">
+              {cat.name_fr}
+            </h2>
+            <button
+              onClick={() => handleDeleteCategory(cat.id, cat.name_fr)}
+              className="text-xs text-red-600 border border-red-200 px-2 py-1 rounded-lg"
+            >
+              Supprimer catégorie
+            </button>
+          </div>
 
           <div className="space-y-3">
             {cat.items.length === 0 && (
@@ -125,6 +155,13 @@ export default function MenuTab() {
                     {item.is_available
                       ? "Marquer indisponible"
                       : "Marquer disponible"}
+                  </button>
+
+                  <button
+                    onClick={() => handleDeleteItem(item)}
+                    className="border border-red-200 text-red-600 text-sm font-medium px-3 py-2 rounded-lg"
+                  >
+                    🗑
                   </button>
                 </div>
               </div>

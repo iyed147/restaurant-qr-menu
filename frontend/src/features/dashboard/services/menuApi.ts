@@ -44,3 +44,10 @@ export function createCategory(payload: {
 }) {
   return api.post("/admin/categories", payload);
 }
+export function deleteMenuItem(itemId: number) {
+  return api.delete(`/admin/menu-items/${itemId}`);
+}
+
+export function deleteCategory(categoryId: number) {
+  return api.delete(`/admin/categories/${categoryId}`);
+}
