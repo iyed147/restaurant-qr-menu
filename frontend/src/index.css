@@ -1,1 +1,20 @@
 @import "tailwindcss";
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes shimmer {
+  0% { background-position: -400px 0; }
+  100% { background-position: 400px 0; }
+}
+
+.skeleton {
+  background: linear-gradient(90deg, #1F1B18 25%, #2A241F 50%, #1F1B18 75%);
+  background-size: 800px 100%;
+  animation: shimmer 1.5s infinite linear;
+}

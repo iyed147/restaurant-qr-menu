@@ -47,8 +47,8 @@ export default function CustomerMenuPage() {
 
   if (!tableToken) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAFAF9] px-4">
-        <p className="text-[#78716C] text-center">
+      <div className="min-h-screen flex items-center justify-center bg-[#141210] px-4">
+        <p className="text-[#A89F91] text-center">
           QR Code invalide. Merci de scanner le QR posé sur votre table.
         </p>
       </div>
@@ -57,16 +57,33 @@ export default function CustomerMenuPage() {
 
   if (loading) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAFAF9]">
-        <p className="text-[#78716C]">Chargement du menu…</p>
-      </div>
+    <div className="min-h-screen bg-[#141210] px-4 py-6">
+      <div className="skeleton h-6 w-32 rounded-lg mb-6" />
+      {[1, 2].map((i) => (
+        <div key={i} className="mb-8">
+          <div className="skeleton h-5 w-24 rounded-lg mb-4" />
+          {[1, 2, 3].map((j) => (
+            <div
+            key={j}
+            className="bg-[#1F1B18] rounded-xl border border-[#2A241F] p-4 mb-3 flex items-center justify-between"
+            >
+              <div className="flex-1">
+                <div className="skeleton h-4 w-28 rounded mb-2" />
+                <div className="skeleton h-3 w-16 rounded" />
+              </div>
+              <div className="skeleton h-9 w-20 rounded-lg" />
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
     );
   }
 
   if (error) {
     return (
-      <div className="min-h-screen flex items-center justify-center bg-[#FAFAF9] px-4">
-        <p className="text-red-600 text-center">{error}</p>
+      <div className="min-h-screen flex items-center justify-center bg-[#141210] px-4">
+        <p className="text-red-400 text-center">{error}</p>
       </div>
     );
   }
@@ -81,25 +98,28 @@ export default function CustomerMenuPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9] pb-24">
-      <header className="bg-white border-b border-[#E7E5E4] px-4 py-4 sticky top-0 z-10 flex items-center justify-between">
+    <div className="min-h-screen bg-[#141210] pb-24">
+      <header className="bg-[#1F1B18] border-b border-[#2A241F] px-4 py-5 sticky top-0 z-10 flex items-center justify-between">
         <div>
-          <h1 className="text-lg font-semibold text-[#1C1917]">
+          <h1
+            className="text-xl font-semibold text-[#D4A94A]"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
             Table {session.tableNumber}
           </h1>
-          <p className="text-sm text-[#78716C]">
+          <p className="text-sm text-[#A89F91]">
             Bonjour {session.prenom} {session.nom}
           </p>
         </div>
 
         {session.lastOrderStatus && (
           <span
-            className={`text-xs font-medium px-2 py-1 rounded-full ${
+            className={`text-xs font-medium px-3 py-1.5 rounded-full ${
               session.lastOrderStatus === "completed"
-                ? "bg-[#0F766E]/10 text-[#0F766E]"
+                ? "bg-[#D4A94A]/15 text-[#D4A94A]"
                 : session.lastOrderStatus === "cancelled"
-                ? "bg-red-100 text-red-600"
-                : "bg-amber-100 text-amber-700"
+                ? "bg-red-500/15 text-red-400"
+                : "bg-amber-500/15 text-amber-400"
             }`}
           >
             {

@@ -51,16 +51,21 @@ export default function OrderEditModal({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-end z-40">
-      <div className="w-full bg-white rounded-t-2xl p-4 max-h-[80vh] overflow-y-auto">
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-[#1C1917]">Modifier la commande</h2>
-          <button onClick={onClose} className="text-[#78716C]">
+    <div className="fixed inset-0 bg-black/60 flex items-end z-40">
+      <div className="w-full bg-[#1F1B18] rounded-t-2xl p-5 max-h-[80vh] overflow-y-auto border-t border-[#2A241F]">
+        <div className="flex justify-between items-center mb-5">
+          <h2
+            className="text-lg font-semibold text-[#D4A94A]"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            Modifier la commande
+          </h2>
+          <button onClick={onClose} className="text-[#A89F91]">
             Fermer
           </button>
         </div>
 
-        <div className="space-y-3 mb-4">
+        <div className="space-y-3 mb-5">
           {order.items.map((originalItem) => {
             const current = items.find((i) => i.menu_item_id === originalItem.menu_item_id);
             const qty = current?.quantity ?? 0;
@@ -69,18 +74,18 @@ export default function OrderEditModal({
                 key={originalItem.menu_item_id}
                 className="flex justify-between items-center"
               >
-                <span className="text-[#1C1917]">{originalItem.name_fr}</span>
+                <span className="text-[#F5F1E8]">{originalItem.name_fr}</span>
                 <div className="flex items-center gap-3">
                   <button
                     onClick={() => updateQty(originalItem.menu_item_id, -1)}
-                    className="w-8 h-8 rounded-lg border border-[#E7E5E4] text-[#1C1917]"
+                    className="w-8 h-8 rounded-lg border border-[#2A241F] text-[#F5F1E8]"
                   >
                     −
                   </button>
-                  <span className="w-6 text-center text-[#1C1917]">{qty}</span>
+                  <span className="w-6 text-center text-[#F5F1E8]">{qty}</span>
                   <button
                     onClick={() => updateQty(originalItem.menu_item_id, 1)}
-                    className="w-8 h-8 rounded-lg border border-[#E7E5E4] text-[#1C1917]"
+                    className="w-8 h-8 rounded-lg border border-[#2A241F] text-[#F5F1E8]"
                   >
                     +
                   </button>
@@ -90,12 +95,12 @@ export default function OrderEditModal({
           })}
         </div>
 
-        {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+        {error && <p className="text-sm text-red-400 mb-4">{error}</p>}
 
         <button
           onClick={handleSave}
           disabled={submitting}
-          className="w-full bg-[#0F766E] text-white py-3 rounded-lg font-medium disabled:opacity-50"
+          className="w-full bg-[#D4A94A] text-[#141210] py-3 rounded-lg font-semibold disabled:opacity-50"
         >
           {submitting ? "Enregistrement…" : "Enregistrer les modifications"}
         </button>

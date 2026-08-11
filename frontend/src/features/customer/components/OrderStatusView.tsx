@@ -83,13 +83,16 @@ export default function OrderStatusView({
 
   if (cancelled) {
     return (
-      <div className="fixed inset-0 bg-white z-30 flex flex-col items-center justify-center px-4">
-        <h2 className="text-xl font-semibold text-[#1C1917] mb-1">
+      <div className="fixed inset-0 bg-[#141210] z-30 flex flex-col items-center justify-center px-4">
+        <h2
+          className="text-xl font-semibold text-[#F5F1E8] mb-1"
+          style={{ fontFamily: "'Playfair Display', serif" }}
+        >
           Commande annulée
         </h2>
         <button
           onClick={handleReturnToMenu}
-          className="bg-[#0F766E] text-white px-6 py-3 rounded-lg font-medium mt-6"
+          className="bg-[#D4A94A] text-[#141210] px-6 py-3 rounded-lg font-semibold mt-6"
         >
           Retour au menu
         </button>
@@ -98,33 +101,36 @@ export default function OrderStatusView({
   }
 
   return (
-    <div className="fixed inset-0 bg-white z-30 flex flex-col items-center justify-center px-4">
-      <div className="w-16 h-16 rounded-full bg-[#0F766E]/10 flex items-center justify-center mb-4">
-        <span className="text-2xl">✓</span>
+    <div className="fixed inset-0 bg-[#141210] z-30 flex flex-col items-center justify-center px-4">
+      <div className="w-20 h-20 rounded-full overflow-hidden mb-5 border-2 border-[#D4A94A]/40">
+        <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
       </div>
-      <h2 className="text-xl font-semibold text-[#1C1917] mb-1">
+      <h2
+        className="text-xl font-semibold text-[#F5F1E8] mb-1"
+        style={{ fontFamily: "'Playfair Display', serif" }}
+      >
         {STATUS_LABELS[currentOrder.status] || currentOrder.status}
       </h2>
-      <p className="text-sm text-[#78716C] mb-6">
-        Total : {currentOrder.total.toFixed(2)} DT
+      <p className="text-sm text-[#A89F91] mb-8">
+        Total : <span className="text-[#D4A94A] font-semibold">{currentOrder.total.toFixed(2)} DT</span>
       </p>
 
       {canEdit && (
         <div className="w-full max-w-xs mb-6">
-          <p className="text-center text-sm text-[#78716C] mb-3">
+          <p className="text-center text-sm text-[#A89F91] mb-3">
             Modification possible pendant {secondsLeft}s
           </p>
           <div className="flex gap-3">
             <button
               onClick={() => setShowEdit(true)}
-              className="flex-1 border border-[#E7E5E4] text-[#1C1917] py-3 rounded-lg font-medium"
+              className="flex-1 border border-[#2A241F] text-[#F5F1E8] py-3 rounded-lg font-medium"
             >
               Modifier
             </button>
             <button
               onClick={handleCancel}
               disabled={cancelling}
-              className="flex-1 border border-red-200 text-red-600 py-3 rounded-lg font-medium disabled:opacity-50"
+              className="flex-1 border border-red-500/30 text-red-400 py-3 rounded-lg font-medium disabled:opacity-50"
             >
               {cancelling ? "…" : "Annuler"}
             </button>
@@ -134,7 +140,7 @@ export default function OrderStatusView({
 
       <button
         onClick={handleReturnToMenu}
-        className="bg-[#0F766E] text-white px-6 py-3 rounded-lg font-medium"
+        className="bg-[#D4A94A] text-[#141210] px-6 py-3 rounded-lg font-semibold"
       >
         Retour au menu
       </button>

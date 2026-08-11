@@ -4,7 +4,7 @@ import { useOrdersSocket } from "../../../shared/hooks/useOrdersSocket";
 import OrderCard from "./OrderCard";
 import type { StaffOrder } from "../types";
 
-const RESTAURANT_ID = 1; // TODO: rendre dynamique multi-restaurant plus tard
+const RESTAURANT_ID = 1;
 
 export default function OrdersTab() {
   const [orders, setOrders] = useState<StaffOrder[]>([]);
@@ -40,17 +40,17 @@ export default function OrdersTab() {
     <div className="p-4">
       <div className="flex items-center gap-2 mb-4">
         <span
-          className={`w-2 h-2 rounded-full ${connected ? "bg-green-500" : "bg-red-400"}`}
+          className={`w-2 h-2 rounded-full ${connected ? "bg-[#D4A94A]" : "bg-red-400"}`}
         />
-        <span className="text-xs text-[#78716C]">
+        <span className="text-xs text-[#A89F91]">
           {connected ? "Connecté en temps réel" : "Déconnecté"}
         </span>
       </div>
 
       {loading ? (
-        <p className="text-[#78716C]">Chargement…</p>
+        <p className="text-[#A89F91]">Chargement…</p>
       ) : activeOrders.length === 0 ? (
-        <p className="text-[#78716C]">Aucune commande en cours.</p>
+        <p className="text-[#A89F91]">Aucune commande en cours.</p>
       ) : (
         <div className="space-y-3">
           {activeOrders.map((order) => (

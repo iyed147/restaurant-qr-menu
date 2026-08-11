@@ -11,10 +11,10 @@ export default function CartBar() {
 
   return (
     <>
-      <div className="fixed bottom-0 left-0 right-0 bg-white border-t border-[#E7E5E4] px-4 py-3">
+      <div className="fixed bottom-0 left-0 right-0 bg-[#1F1B18] border-t border-[#2A241F] px-4 py-3">
         <button
           onClick={() => setShowModal(true)}
-          className="w-full bg-[#0F766E] text-white py-3 rounded-lg font-medium flex justify-between px-4"
+          className="w-full bg-[#D4A94A] text-[#141210] py-3 rounded-lg font-semibold flex justify-between px-4"
         >
           <span>{items.reduce((n, i) => n + i.quantity, 0)} article(s)</span>
           <span>{total.toFixed(2)} DT</span>

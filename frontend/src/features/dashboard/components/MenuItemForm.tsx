@@ -45,23 +45,28 @@ export default function MenuItemForm({
   };
 
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-end z-20">
+    <div className="fixed inset-0 bg-black/60 flex items-end z-20">
       <form
         onSubmit={handleSubmit}
-        className="w-full bg-white rounded-t-2xl p-4 max-h-[85vh] overflow-y-auto"
+        className="w-full bg-[#1F1B18] rounded-t-2xl p-5 max-h-[85vh] overflow-y-auto border-t border-[#2A241F]"
       >
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-lg font-semibold text-[#1C1917]">Nouveau produit</h2>
-          <button type="button" onClick={onClose} className="text-[#78716C]">
+        <div className="flex justify-between items-center mb-5">
+          <h2
+            className="text-lg font-semibold text-[#D4A94A]"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            Nouveau produit
+          </h2>
+          <button type="button" onClick={onClose} className="text-[#A89F91]">
             Fermer
           </button>
         </div>
 
-        <label className="block text-sm text-[#1C1917] mb-1">Catégorie</label>
+        <label className="block text-sm text-[#F5F1E8] mb-1">Catégorie</label>
         <select
           value={categoryId}
           onChange={(e) => setCategoryId(Number(e.target.value))}
-          className="w-full mb-4 px-3 py-2 rounded-lg border border-[#E7E5E4]"
+          className="w-full mb-4 px-3 py-2.5 rounded-lg bg-[#141210] border border-[#2A241F] text-[#F5F1E8]"
         >
           {categories.map((c) => (
             <option key={c.id} value={c.id}>
@@ -70,33 +75,33 @@ export default function MenuItemForm({
           ))}
         </select>
 
-        <label className="block text-sm text-[#1C1917] mb-1">Nom (FR)</label>
+        <label className="block text-sm text-[#F5F1E8] mb-1">Nom (FR)</label>
         <input
           required
           value={nameFr}
           onChange={(e) => setNameFr(e.target.value)}
-          className="w-full mb-4 px-3 py-2 rounded-lg border border-[#E7E5E4]"
+          className="w-full mb-4 px-3 py-2.5 rounded-lg bg-[#141210] border border-[#2A241F] text-[#F5F1E8] focus:outline-none focus:ring-2 focus:ring-[#D4A94A]"
         />
 
-        <label className="block text-sm text-[#1C1917] mb-1">
-          Nom (EN) <span className="text-[#78716C]">(optionnel)</span>
+        <label className="block text-sm text-[#F5F1E8] mb-1">
+          Nom (EN) <span className="text-[#A89F91]">(optionnel)</span>
         </label>
         <input
           value={nameEn}
           onChange={(e) => setNameEn(e.target.value)}
-          className="w-full mb-4 px-3 py-2 rounded-lg border border-[#E7E5E4]"
+          className="w-full mb-4 px-3 py-2.5 rounded-lg bg-[#141210] border border-[#2A241F] text-[#F5F1E8] focus:outline-none focus:ring-2 focus:ring-[#D4A94A]"
         />
 
-        <label className="block text-sm text-[#1C1917] mb-1">
-          Description <span className="text-[#78716C]">(optionnel)</span>
+        <label className="block text-sm text-[#F5F1E8] mb-1">
+          Description <span className="text-[#A89F91]">(optionnel)</span>
         </label>
         <input
           value={description}
           onChange={(e) => setDescription(e.target.value)}
-          className="w-full mb-4 px-3 py-2 rounded-lg border border-[#E7E5E4]"
+          className="w-full mb-4 px-3 py-2.5 rounded-lg bg-[#141210] border border-[#2A241F] text-[#F5F1E8] focus:outline-none focus:ring-2 focus:ring-[#D4A94A]"
         />
 
-        <label className="block text-sm text-[#1C1917] mb-1">Prix (DT)</label>
+        <label className="block text-sm text-[#F5F1E8] mb-1">Prix (DT)</label>
         <input
           required
           type="number"
@@ -104,15 +109,15 @@ export default function MenuItemForm({
           min="0.1"
           value={price}
           onChange={(e) => setPrice(e.target.value)}
-          className="w-full mb-4 px-3 py-2 rounded-lg border border-[#E7E5E4]"
+          className="w-full mb-4 px-3 py-2.5 rounded-lg bg-[#141210] border border-[#2A241F] text-[#F5F1E8] focus:outline-none focus:ring-2 focus:ring-[#D4A94A]"
         />
 
-        {error && <p className="text-sm text-red-600 mb-3">{error}</p>}
+        {error && <p className="text-sm text-red-400 mb-3">{error}</p>}
 
         <button
           type="submit"
           disabled={submitting || categories.length === 0}
-          className="w-full bg-[#0F766E] text-white py-3 rounded-lg font-medium disabled:opacity-50"
+          className="w-full bg-[#D4A94A] text-[#141210] py-3 rounded-lg font-semibold disabled:opacity-50"
         >
           {submitting ? "Création…" : "Créer le produit"}
         </button>

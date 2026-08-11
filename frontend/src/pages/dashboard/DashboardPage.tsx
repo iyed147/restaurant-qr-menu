@@ -5,6 +5,7 @@ import OrdersTab from "../../features/dashboard/components/OrdersTab";
 import MenuTab from "../../features/dashboard/components/MenuTab";
 import TablesTab from "../../features/dashboard/components/TablesTab";
 import UsersTab from "../../features/dashboard/components/UsersTab";
+
 type Tab = "orders" | "menu" | "tables" | "users";
 
 export default function DashboardPage() {
@@ -20,18 +21,28 @@ export default function DashboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#FAFAF9]">
-      <header className="bg-white border-b border-[#E7E5E4] px-4 py-4 flex items-center justify-between sticky top-0 z-10">
-        <h1 className="text-lg font-semibold text-[#1C1917]">Dashboard</h1>
+    <div className="min-h-screen bg-[#141210]">
+      <header className="bg-[#1F1B18] border-b border-[#2A241F] px-4 py-5 flex items-center justify-between sticky top-0 z-10">
+        <div className="flex items-center gap-3">
+          <div className="w-9 h-9 rounded-full overflow-hidden border-2 border-[#D4A94A]/40">
+            <img src="/logo.png" alt="Logo" className="w-full h-full object-cover" />
+          </div>
+          <h1
+            className="text-lg font-semibold text-[#D4A94A]"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            Dashboard
+          </h1>
+        </div>
         <button
           onClick={handleLogout}
-          className="text-sm text-[#78716C] border border-[#E7E5E4] px-3 py-1.5 rounded-lg"
+          className="text-sm text-[#A89F91] border border-[#2A241F] px-3 py-1.5 rounded-lg"
         >
           Déconnexion
         </button>
       </header>
 
-      <nav className="bg-white border-b border-[#E7E5E4] px-4 flex gap-4 overflow-x-auto">
+      <nav className="bg-[#1F1B18] border-b border-[#2A241F] px-4 flex gap-4 overflow-x-auto">
         <TabButton active={tab === "orders"} onClick={() => setTab("orders")}>
           Commandes
         </TabButton>
@@ -70,10 +81,10 @@ function TabButton({
   return (
     <button
       onClick={onClick}
-      className={`py-3 text-sm font-medium border-b-2 whitespace-nowrap ${
+      className={`py-3 text-sm font-medium border-b-2 whitespace-nowrap transition-colors ${
         active
-          ? "border-[#0F766E] text-[#0F766E]"
-          : "border-transparent text-[#78716C]"
+          ? "border-[#D4A94A] text-[#D4A94A]"
+          : "border-transparent text-[#A89F91]"
       }`}
     >
       {children}
